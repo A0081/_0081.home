@@ -1,0 +1,22 @@
+# Netlify build settings. These also live in the site's UI, but keeping them
+# here means a deploy is reproducible from the repo alone.
+
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Astro puts a content hash in every filename under /_astro/, so these can be
+# cached forever. Netlify's own fingerprint detection does not recognise the
+# `name.HASH.ext` shape and was serving them with `max-age=0, must-revalidate`,
+# which forced a revalidation on every visit.
+#
+# Only this rule is listed on purpose: Netlify lets a later matching rule
+# override an earlier one, so a catch-all `for = "/*"` below it would silently
+# undo this. HTML already defaults to `max-age=0, must-revalidate`.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

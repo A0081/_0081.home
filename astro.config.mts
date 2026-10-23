@@ -9,6 +9,14 @@ import { satteri } from "@astrojs/markdown-satteri";
 // https://astro.build/config
 export default defineConfig({
   site: "https://i0081.asia",
+  // Netlify's edge is far from here (~1.3s TTFB), so every click that has to
+  // fetch an HTML file feels slow. Prefetching every internal link as soon as
+  // it enters the viewport moves that wait off the click: the sidebar nav is
+  // always visible, so it warms up on page load.
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: "viewport",
+  },
   markdown: {
     // Two Shiki themes so code follows the page theme: `--shiki-light` /
     // `--shiki-dark` are emitted as custom properties and global.css picks one.
