@@ -1,0 +1,76 @@
+<button
+  id="back-to-top"
+  type="button"
+  aria-label="返回顶部"
+  title="返回顶部"
+  class="pointer-events-none fixed right-6 bottom-6 z-50 translate-y-4 cursor-pointer rounded-full border border-base-300 bg-base-100/90 p-3 text-base-content opacity-0 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-110 focus:outline-none active:scale-95"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="m5 12 7-7 7 7"></path>
+    <path d="M12 19V5"></path>
+  </svg>
+</button>
+
+<script>
+  type BackToTopWindow = Window & {
+    __backToTopCleanup?: () => void;
+  };
+
+  const typedWindow = window as BackToTopWindow;
+
+  const setupBackToTop = () => {
+    if (typedWindow.__backToTopCleanup) {
+      typedWindow.__backToTopCleanup();
+    }
+
+    const button = document.getElementById("back-to-top");
+    if (!button) return;
+
+    const toggleVisibility = () => {
+      const isScrolled = window.scrollY > 300;
+
+      button.classList.toggle("opacity-0", !isScrolled);
+      button.classList.toggle("pointer-events-none", !isScrolled);
+      button.classList.toggle("translate-y-4", !isScrolled);
+      button.classList.toggle("opacity-100", isScrolled);
+      button.classList.toggle("pointer-events-auto", isScrolled);
+      button.classList.toggle("translate-y-0", isScrolled);
+    };
+
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.addEventListener("scroll", toggleVisibility, { passive: true });
+    button.addEventListener("click", scrollToTop);
+
+    typedWindow.__backToTopCleanup = () => {
+      window.removeEventListener("scroll", toggleVisibility);
+      button.removeEventListener("click", scrollToTop);
+    };
+
+    toggleVisibility();
+  };
+
+  const cleanupBackToTop = () => {
+    if (typedWindow.__backToTopCleanup) {
+      typedWindow.__backToTopCleanup();
+      delete typedWindow.__backToTopCleanup;
+    }
+  };
+
+  document.addEventListener("astro:before-swap", cleanupBackToTop);
+  document.addEventListener("astro:page-load", setupBackToTop);
+  setupBackToTop();
+</script>

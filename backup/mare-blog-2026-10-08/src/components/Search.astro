@@ -1,0 +1,86 @@
+---
+import { Icon } from "astro-icon/components";
+
+const isDev = import.meta.env.DEV;
+---
+
+<button
+  id="search-toggle"
+  type="button"
+  aria-label="搜索"
+  data-tooltip="搜索"
+  class="nav-scale-bg cursor-pointer rounded-md p-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-accent-strong hover:before:bg-accent/10"
+>
+  <Icon name="lucide:search" class="h-5 w-5" />
+</button>
+
+{
+  isDev && (
+    <dialog
+      id="search-dev-dialog"
+      aria-labelledby="search-dev-title"
+      class="mx-auto mt-[10dvh] mb-auto max-h-[min(80dvh,800px)] w-full max-w-140 overflow-hidden rounded-xl border border-border bg-surface p-0 text-text shadow-2xl backdrop:bg-text/50"
+    >
+      <div class="flex items-center gap-2 border-b border-border px-4 py-4">
+        <Icon name="lucide:search" class="h-4 w-4 shrink-0 text-muted" />
+        <h2
+          id="search-dev-title"
+          class="m-0 min-w-0 flex-1 truncate text-base leading-5 font-normal tracking-normal text-muted"
+        >
+          搜索
+        </h2>
+      </div>
+
+      <div class="px-4 py-8 text-center">
+        <Icon name="lucide:info" class="mx-auto mb-3 h-5 w-5 text-muted" />
+        <p class="mb-1 text-sm font-medium text-text">
+          开发模式下没有搜索索引
+        </p>
+        <p class="text-xs text-muted">
+          搜索索引由构建时生成，请先运行 <code>pnpm build</code>，再用
+          <code>pnpm preview</code> 打开站点即可使用。
+        </p>
+      </div>
+
+      <div class="border-t border-border px-4 py-2.5 text-xs text-muted">
+        按
+        <kbd
+          class="mx-1 rounded border border-border bg-background px-1.5 py-0.5 text-[0.625rem]"
+        >
+          Esc
+        </kbd>
+        关闭
+      </div>
+    </dialog>
+  )
+}
+
+<script is:inline>
+  const setupSearchToggle = () => {
+    const searchButton = document.getElementById("search-toggle");
+    const devDialog = document.getElementById("search-dev-dialog");
+
+    if (!searchButton) return;
+
+    if (devDialog instanceof HTMLDialogElement) {
+      devDialog.onclick = (event) => {
+        if (event.target === devDialog) devDialog.close();
+      };
+    }
+
+    searchButton.onclick = () => {
+      if (devDialog instanceof HTMLDialogElement) {
+        if (!devDialog.open) devDialog.showModal();
+        return;
+      }
+
+      const modal = document.querySelector("pagefind-modal");
+      if (modal && "open" in modal && typeof modal.open === "function") {
+        modal.open();
+      }
+    };
+  };
+
+  setupSearchToggle();
+  document.addEventListener("astro:page-load", setupSearchToggle);
+</script>

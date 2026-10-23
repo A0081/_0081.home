@@ -1,0 +1,176 @@
+---
+interface Props {
+  years: { year: number; count: number }[];
+}
+
+const { years } = Astro.props;
+---
+
+<nav
+  id="year-jump-nav"
+  aria-label="按年份跳转"
+  class="sticky top-0 z-20 mb-4 border-b border-border bg-background/85 px-5 py-3 backdrop-blur-sm sm:px-8 lg:top-8 lg:z-auto lg:mb-0 lg:block lg:self-start lg:border-b-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"
+>
+  <p
+    class="mb-2 hidden text-xs font-semibold tracking-wide text-muted uppercase lg:block"
+  >
+    年份
+  </p>
+  <ul
+    class="flex gap-2 overflow-x-auto lg:flex-col lg:gap-1 lg:overflow-visible"
+  >
+    {
+      years.map(({ year, count }) => (
+        <li class="shrink-0 lg:shrink">
+          <a
+            href={`#year-${year}`}
+            data-year-link={year}
+            class="year-jump-link inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap text-muted transition-colors duration-200 hover:bg-accent/10 hover:text-accent-strong lg:w-full lg:justify-between"
+          >
+            <span>{year}</span>
+            <span
+              class="year-jump-count inline-flex min-w-5 justify-center rounded px-1.5 py-0.5 text-[0.6875rem] leading-none font-semibold tabular-nums"
+            >
+              {count}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  type YearJumpWindow = Window & {
+    __yearJumpCleanup?: () => void;
+  };
+
+  const typedWindow = window as YearJumpWindow;
+
+  const setupYearJump = () => {
+    if (typedWindow.__yearJumpCleanup) {
+      typedWindow.__yearJumpCleanup();
+      delete typedWindow.__yearJumpCleanup;
+    }
+
+    const nav = document.getElementById("year-jump-nav");
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>("[data-year-link]"),
+    );
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-year-section]"),
+    );
+    if (!nav || links.length === 0 || sections.length === 0) return;
+
+    const byYear = new Map<string, HTMLAnchorElement>();
+    for (const link of links) {
+      byYear.set(link.dataset.yearLink ?? "", link);
+    }
+
+    const setActive = (year: string | undefined) => {
+      for (const [value, link] of byYear) {
+        link.classList.toggle("is-active", value === year);
+      }
+    };
+
+    let frame = 0;
+    const updateActiveYear = () => {
+      frame = 0;
+      const threshold = 140;
+      let activeYear = sections[0]?.dataset.yearSection;
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= threshold) {
+          activeYear = section.dataset.yearSection;
+        } else {
+          break;
+        }
+      }
+      setActive(activeYear);
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateActiveYear);
+    };
+
+    const onClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const link = event.target.closest<HTMLAnchorElement>("[data-year-link]");
+      if (!link) return;
+
+      const hash = link.getAttribute("href");
+      if (!hash || !hash.startsWith("#")) return;
+
+      const target = document.getElementById(hash.slice(1));
+      if (!target) return;
+
+      event.preventDefault();
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      target.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+      history.pushState(null, "", hash);
+    };
+
+    nav.addEventListener("click", onClick);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    updateActiveYear();
+
+    typedWindow.__yearJumpCleanup = () => {
+      nav.removeEventListener("click", onClick);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  };
+
+  const cleanupYearJump = () => {
+    if (typedWindow.__yearJumpCleanup) {
+      typedWindow.__yearJumpCleanup();
+      delete typedWindow.__yearJumpCleanup;
+    }
+  };
+
+  document.addEventListener("astro:before-swap", cleanupYearJump);
+  document.addEventListener("astro:page-load", setupYearJump);
+  setupYearJump();
+</script>
+
+<style>
+  .year-jump-link.is-active {
+    background-color: color-mix(
+      in oklab,
+      var(--color-primary) 12%,
+      transparent
+    );
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .year-jump-count {
+    background-color: var(--color-base-200);
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  }
+
+  .year-jump-link:hover .year-jump-count {
+    background-color: color-mix(
+      in oklab,
+      var(--color-primary) 12%,
+      transparent
+    );
+    color: var(--color-primary);
+  }
+
+  .year-jump-link.is-active .year-jump-count {
+    background-color: color-mix(
+      in oklab,
+      var(--color-primary) 12%,
+      transparent
+    );
+    color: var(--color-primary);
+  }
+</style>

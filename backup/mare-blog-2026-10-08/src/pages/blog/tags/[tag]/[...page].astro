@@ -1,0 +1,66 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import type { GetStaticPaths, Page } from "astro";
+import siteConfig from "@config";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import PostCard from "../../../../components/PostCard.astro";
+import Pagination from "../../../../components/Pagination.astro";
+import {
+  getPostsForTag,
+  getTagHref,
+  getTagSummaries,
+} from "../../../../utils/tags";
+import { Icon } from "astro-icon/components";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const allPosts = await getCollection("blog");
+  const tags = getTagSummaries(allPosts);
+  const pageSize = Math.max(1, Math.floor(siteConfig.postsPerPage ?? 6));
+
+  return tags.flatMap((tag) => {
+    const posts = getPostsForTag(allPosts, tag.slug);
+    return paginate(posts, {
+      params: { tag: tag.slug },
+      pageSize,
+      props: { tagName: tag.name, totalPosts: posts.length },
+    });
+  });
+}) satisfies GetStaticPaths;
+
+type Props = {
+  page: Page<CollectionEntry<"blog">>;
+  tagName: string;
+  totalPosts: number;
+};
+
+const { page, tagName, totalPosts } = Astro.props;
+const description =
+  page.currentPage === 1 ? `共 ${totalPosts} 篇文章带有此标签` : undefined;
+---
+
+<BaseLayout
+  pageTitle={`标签：${tagName}${page.currentPage > 1 ? ` - 第 ${page.currentPage} 页` : ""}`}
+  description={description}
+>
+  <a
+    slot="page-header-prefix"
+    href="/blog/tags"
+    class="inline-flex items-center gap-1 text-sm font-medium opacity-70 transition-colors hover:text-primary"
+  >
+    <Icon name="lucide:arrow-left" class="h-3.5 w-3.5" />
+    <span>返回标签</span>
+  </a>
+
+  <div class="flex flex-col">
+    {
+      page.data.map((post) => (
+        <>
+          <PostCard post={post} />
+          <div class="divider my-0" />
+        </>
+      ))
+    }
+  </div>
+
+  <Pagination prevUrl={page.url.prev} nextUrl={page.url.next} />
+</BaseLayout>

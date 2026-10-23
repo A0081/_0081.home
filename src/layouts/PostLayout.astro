@@ -1,0 +1,96 @@
+---
+import { type BlogSchema } from "../content.config";
+import BaseLayout from "./BaseLayout.astro";
+import MusicPlayer from "../components/MusicPlayer.astro";
+import { Image } from "astro:assets";
+
+export interface Props extends Omit<BlogSchema, "pubDate"> {
+  pubDate?: Date;
+}
+
+const {
+  title,
+  description,
+  pubDate,
+  updatedDate,
+  heroImage,
+  badge,
+  music,
+  musicTitle,
+  tags = [],
+} = Astro.props;
+
+const displayDate = pubDate
+  ? pubDate.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  : "";
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  image={heroImage}
+  ogType="article"
+>
+  {/*
+    Three items in source order — head, table of contents, body — so narrow
+    screens keep the familiar title / contents / article stack. Wide screens
+    turn this into a grid and move the contents into its own column.
+  */}
+  <main class="post-grid">
+    <div class="post-head">
+      {
+        heroImage && (
+          <Image
+            width={750}
+            height={422}
+            format="webp"
+            src={heroImage}
+            alt={title}
+            class="mb-6 w-full"
+          />
+        )
+      }
+      <h1 class="title my-2 text-4xl font-bold">{title}</h1>
+      <div
+        class="not-prose flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+          {pubDate && <time>{displayDate}</time>}
+          {badge && <div class="badge badge-secondary">{badge}</div>}
+          {
+            tags &&
+              tags.map((tag) => (
+                <a
+                  href={`/blog/tag/${tag}`}
+                  class="badge badge-outline no-underline"
+                >
+                  {tag}
+                </a>
+              ))
+          }
+          {
+            updatedDate && (
+              <div>
+                更新于 <time>{updatedDate}</time>
+              </div>
+            )
+          }
+        </div>
+        {music && <MusicPlayer src={music} label={musicTitle} />}
+      </div>
+      <div class="divider my-2" />
+    </div>
+
+    <div class="post-toc">
+      <slot name="toc" />
+    </div>
+
+    <article class="prose prose-lg prose-img:mx-auto">
+      <slot />
+    </article>
+  </main>
+</BaseLayout>

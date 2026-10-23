@@ -1,0 +1,88 @@
+---
+import SideBarFooter from "./SideBarFooter.astro";
+import SideBarMenu from "./SideBarMenu.astro";
+import SideBarStats from "./SideBarStats.astro";
+import { Image } from "astro:assets";
+import { SITE_AUTHOR, SITE_AUTHOR_BIO } from "../config";
+
+interface Props {
+  sideBarActiveItemID?: string;
+  /**
+   * default = template sidebar
+   * a       = same column, menu gains icons and a stronger active state
+   * b       = starpod-style: the column becomes stacked rounded cards
+   */
+  variant?: "default" | "a" | "b";
+}
+
+const { sideBarActiveItemID, variant = "default" } = Astro.props;
+---
+
+<div class="drawer-side z-40">
+  <label for="my-drawer" class="drawer-overlay"></label>
+
+  {
+    variant === "b" ? (
+      <aside class="flex min-h-full w-[var(--sidebar-width)] flex-col overflow-y-auto bg-base-200 text-base-content">
+        <div class="m-2 rounded-lg bg-base-100 px-6 py-4 text-center">
+          <a href="/" aria-label={`${SITE_AUTHOR} 首页`} class="block">
+            <div
+              class="mx-auto block w-[10.5rem] overflow-hidden rounded-2xl transition ease-in-out hover:scale-[102%]"
+            >
+              <Image
+                class="h-full w-full object-cover"
+                format="webp"
+                width={300}
+                height={300}
+                src="/profile.webp"
+                alt={SITE_AUTHOR}
+              />
+            </div>
+          </a>
+          <p class="mt-4 mb-1 text-lg font-bold">{SITE_AUTHOR}</p>
+          <p class="text-sm text-base-content/60">{SITE_AUTHOR_BIO}</p>
+        </div>
+
+        <SideBarMenu
+          sideBarActiveItemID={sideBarActiveItemID}
+          variant="b"
+        />
+
+        <SideBarStats />
+
+        <SideBarFooter variant="b" />
+      </aside>
+    ) : (
+      <aside class="flex h-auto min-h-full w-[var(--sidebar-width)] flex-col bg-base-200 px-2 pt-2 text-base-content">
+        <div class="mx-auto mt-5 mb-4 w-fit">
+          <a href="/" aria-label={`${SITE_AUTHOR} 首页`}>
+            <div
+              class="m-auto block w-[8.5rem] overflow-hidden rounded-2xl transition ease-in-out hover:scale-[102%]"
+            >
+              <Image
+                class="h-full w-full object-cover"
+                format="webp"
+                width={300}
+                height={300}
+                src="/profile.webp"
+                alt={SITE_AUTHOR}
+              />
+            </div>
+          </a>
+          <p class="mt-4 mb-1 text-center text-lg font-bold">{SITE_AUTHOR}</p>
+          <p class="mx-auto max-w-[15rem] text-center text-sm text-base-content/60">
+            {SITE_AUTHOR_BIO}
+          </p>
+        </div>
+
+        <div class="mx-3 mb-2 border-t border-base-300"></div>
+
+        <SideBarMenu
+          sideBarActiveItemID={sideBarActiveItemID}
+          variant={variant}
+        />
+        <SideBarFooter />
+      </aside>
+    )
+  }
+</div>

@@ -1,0 +1,29 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getTagHref, getTagSummaries } from "../../../utils/tags";
+
+const tags = getTagSummaries(await getCollection("blog"));
+---
+
+<BaseLayout pageTitle="标签" description="按主题浏览文章。">
+  {
+    tags.length > 0 ? (
+      <ul class="flex flex-wrap gap-3">
+        {tags.map((tag) => (
+          <li>
+            <a
+              href={getTagHref(tag.name)}
+              class="badge badge-outline badge-lg gap-2 px-4 py-3 no-underline transition-colors hover:badge-primary"
+            >
+              <span>{tag.name}</span>
+              <span class="opacity-60">{tag.count}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-sm opacity-60">还没有任何标签。</p>
+    )
+  }
+</BaseLayout>

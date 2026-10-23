@@ -1,0 +1,44 @@
+---
+import {
+  type CollectionEntry,
+  getCollection,
+  render,
+} from "astro:content";
+import { AboutSchema } from "../../content.config";
+import PostLayout from "../../layouts/PostLayout.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
+import createSlug from "../../lib/createSlug";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("about");
+  return entries.map((entry) => ({
+    params: { slug: createSlug(entry.data.title, entry.id) },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<"about">;
+}
+
+const { entry } = Astro.props;
+const post: AboutSchema = entry.data;
+const { Content, headings } = await render(entry);
+---
+
+<PostLayout
+  title={post.title}
+  description={post.description}
+  pubDate={post.pubDate}
+  heroImage={post.heroImage}
+  updatedDate={post.updatedDate}
+  badge={post.badge}
+  music={post.music}
+  musicTitle={post.musicTitle}
+  tags={post.tags}
+>
+  <Fragment slot="toc">
+    <TableOfContents headings={headings} />
+  </Fragment>
+  <Content />
+</PostLayout>

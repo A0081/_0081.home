@@ -1,0 +1,43 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  prevUrl?: string;
+  nextUrl?: string;
+  prevLabel?: string;
+  nextLabel?: string;
+}
+
+const {
+  prevUrl,
+  nextUrl,
+  prevLabel = "较新",
+  nextLabel = "较早",
+} = Astro.props;
+---
+
+<nav
+  aria-label="分页"
+  class="mt-10 flex items-center justify-between gap-4"
+>
+  {
+    prevUrl ? (
+      <a href={prevUrl} class="btn btn-ghost">
+        <Icon name="lucide:chevron-left" class="h-5 w-5" />
+        {prevLabel}
+      </a>
+    ) : (
+      <div />
+    )
+  }
+  {
+    nextUrl ? (
+      <a href={nextUrl} class="btn btn-ghost">
+        {nextLabel}
+        <Icon name="lucide:chevron-right" class="h-5 w-5" />
+      </a>
+    ) : (
+      <div />
+    )
+  }
+</nav>

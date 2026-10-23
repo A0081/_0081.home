@@ -1,0 +1,55 @@
+---
+import siteConfig from "@config";
+import { getCollection } from "astro:content";
+import PostCard from "../components/PostCard.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("blog"))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout
+  pageTitle={siteConfig.title}
+  description={siteConfig.description}
+  hidePageHeader
+>
+  <section class="mt-5 pb-12">
+    <div class="py-1 text-xl">你好 👋</div>
+    <h1 class="my-0 text-5xl font-bold">{siteConfig.author}</h1>
+    <div class="py-3 text-2xl font-bold opacity-80">
+      {siteConfig.authorBio}
+    </div>
+    <p class="max-w-2xl py-2 text-lg opacity-80">
+      {siteConfig.description}
+    </p>
+    <div class="mt-8 flex flex-wrap gap-4">
+      <a class="btn btn-primary" href="/about">关于我</a>
+      <a class="btn btn-outline" href="/blog">浏览文章</a>
+    </div>
+  </section>
+
+  <section aria-labelledby="latest-posts-heading">
+    <div class="mb-2 flex items-center justify-between">
+      <h2 id="latest-posts-heading" class="text-3xl font-bold">
+        最新文章
+      </h2>
+      <a class="link link-hover text-sm" href="/blog">查看全部</a>
+    </div>
+
+    {
+      posts.length > 0 ? (
+        <div class="flex flex-col">
+          {posts.map((post) => (
+            <>
+              <PostCard post={post} />
+              <div class="divider my-0" />
+            </>
+          ))}
+        </div>
+      ) : (
+        <p class="py-2 text-sm opacity-60">还没有发布文章。</p>
+      )
+    }
+  </section>
+</BaseLayout>

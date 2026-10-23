@@ -1,0 +1,93 @@
+---
+const isDev = import.meta.env.DEV;
+---
+
+{!isDev && <pagefind-modal instance="site-search" />}
+
+<script>
+  import "@pagefind/component-ui";
+</script>
+
+<style is:global>
+  @import "@pagefind/component-ui/css";
+
+  /*
+   * Map Pagefind's own theme variables onto the site design tokens, so the
+   * search modal, including its loading skeleton bars, matches the palette
+   * instead of Pagefind's default neutral greys.
+   */
+  :root,
+  [data-pf-theme="dark"] {
+    --pf-text: var(--color-base-content);
+    --pf-text-secondary: var(--color-base-content);
+    --pf-text-muted: var(--color-base-content);
+    --pf-background: var(--color-base-100);
+    --pf-border: var(--color-base-300);
+    --pf-border-focus: var(--color-primary);
+    --pf-hover: color-mix(
+      in oklab,
+      var(--color-base-content) 8%,
+      transparent
+    );
+    --pf-skeleton: color-mix(
+      in oklab,
+      var(--color-base-content) 10%,
+      transparent
+    );
+    --pf-skeleton-shine: color-mix(
+      in oklab,
+      var(--color-base-content) 20%,
+      transparent
+    );
+    --pf-mark: var(--color-base-content);
+    --pf-scroll-shadow: color-mix(
+      in oklab,
+      var(--color-base-content) 14%,
+      transparent
+    );
+    --pf-outline-focus: var(--color-primary);
+    /* Deep tone from the palette rather than a pure black scrim. */
+    --pf-modal-backdrop: color-mix(
+      in oklab,
+      var(--color-neutral) 75%,
+      transparent
+    );
+    --pf-font: var(--font-sans);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #search-dev-dialog[open] {
+      animation: search-dev-dialog-appear 0.15s ease-out;
+    }
+
+    @keyframes search-dev-dialog-appear {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  }
+</style>
+
+<script is:inline>
+  const syncPagefindTheme = () => {
+    const pagefindModal = document.querySelector("pagefind-modal");
+    if (!(pagefindModal instanceof HTMLElement)) return;
+
+    if (document.documentElement.classList.contains("dark")) {
+      pagefindModal.setAttribute("data-pf-theme", "dark");
+    } else {
+      pagefindModal.removeAttribute("data-pf-theme");
+    }
+  };
+
+  syncPagefindTheme();
+  document.addEventListener("astro:page-load", syncPagefindTheme);
+  document.addEventListener("theme-changed", syncPagefindTheme);
+  document.addEventListener("astro:after-swap", syncPagefindTheme);
+</script>

@@ -1,0 +1,151 @@
+<button
+  type="button"
+  id="theme-toggle"
+  class="mx-3 inline-flex cursor-pointer border-0 bg-transparent p-0 text-current transition ease-in-out hover:scale-110"
+  aria-label="切换主题"
+  title="切换主题"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    ><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg
+  >
+</button>
+
+<script>
+  // Clicking the moon steps through the themes in order, no menu.
+  const THEME_KEY = "data-theme";
+  const THEMES = ["light", "dark"];
+  const DEFAULT_THEME = THEMES[0];
+
+  const readTheme = () => {
+    try {
+      const stored = window.localStorage.getItem(THEME_KEY);
+      return stored && THEMES.includes(stored) ? stored : DEFAULT_THEME;
+    } catch {
+      return DEFAULT_THEME;
+    }
+  };
+
+  const storeTheme = (theme: string) => {
+    try {
+      window.localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // Private mode / storage disabled: the theme still applies for this page.
+    }
+  };
+
+  const describe = (theme: string) => `主题：${theme}（点击切换）`;
+
+  const applyTheme = (theme: string) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    storeTheme(theme);
+
+    const button = document.getElementById("theme-toggle");
+    if (button) {
+      button.setAttribute("title", describe(theme));
+      button.setAttribute("aria-label", describe(theme));
+    }
+  };
+
+  const setupThemeToggle = () => {
+    const button = document.getElementById("theme-toggle");
+    if (!button) return;
+    if (button.dataset.themeToggleReady === "true") return;
+    button.dataset.themeToggleReady = "true";
+
+    applyTheme(readTheme());
+
+    button.addEventListener("click", () => switchTheme(button));
+  };
+
+  type ViewTransitionLike = {
+    ready: Promise<void>;
+    finished: Promise<void>;
+  };
+
+  const startViewTransition = (
+    document as unknown as {
+      startViewTransition?: (callback: () => void) => ViewTransitionLike;
+    }
+  ).startViewTransition;
+
+  /*
+   * Cycle to the next palette. Where the View Transitions API is available the
+   * new theme is revealed as a circle growing out of the toggle button; the
+   * class on <html> disables the default cross-fade for this transition only.
+   */
+  const switchTheme = (button: HTMLElement) => {
+    const current =
+      document.documentElement.getAttribute("data-theme") ?? DEFAULT_THEME;
+    const position = THEMES.indexOf(current);
+    const theme = THEMES[(position + 1) % THEMES.length];
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (typeof startViewTransition !== "function" || reduceMotion) {
+      applyTheme(theme);
+      return;
+    }
+
+    const rect = button.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    document.documentElement.classList.add("theme-transition");
+    const transition = startViewTransition.call(document, () =>
+      applyTheme(theme),
+    );
+
+    transition.ready
+      .then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 520,
+            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            pseudoElement: "::view-transition-new(root)",
+          },
+        );
+      })
+      .catch(() => {
+        // If the reveal cannot be animated the palette has already changed.
+      });
+
+    transition.finished
+      .catch(() => {})
+      .finally(() => {
+        document.documentElement.classList.remove("theme-transition");
+      });
+  };
+
+  setupThemeToggle();
+  document.addEventListener("astro:page-load", setupThemeToggle);
+
+  // Carry the stored theme into the incoming document before it swaps in, so
+  // navigating between pages never flashes the default palette.
+  document.addEventListener("astro:before-swap", (event) => {
+    const newDocument = (event as Event & { newDocument?: Document })
+      .newDocument;
+    newDocument?.querySelector("html")?.setAttribute("data-theme", readTheme());
+  });
+</script>

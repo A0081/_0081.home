@@ -1,0 +1,46 @@
+---
+import { formatWords, getSiteStats } from "../utils/stats";
+
+const stats = await getSiteStats();
+
+const pad = (value: number) => String(value).padStart(2, "0");
+
+const updatedLabel = stats.lastUpdated
+  ? `${stats.lastUpdated.getFullYear()}-${pad(stats.lastUpdated.getMonth() + 1)}-${pad(stats.lastUpdated.getDate())}`
+  : "—";
+
+const rows = [
+  { label: "文章", value: String(stats.posts) },
+  { label: "闪念", value: String(stats.journal) },
+  { label: "标签", value: String(stats.tags) },
+  { label: "字数", value: formatWords(stats.words) },
+  { label: "最近更新", value: updatedLabel },
+];
+---
+
+<section
+  class="m-2 flex max-h-[20rem] grow shrink-0 flex-col rounded-lg bg-base-100 px-4 py-5"
+>
+  <p
+    class="pb-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-base-content/45"
+  >
+    数据
+  </p>
+
+  {/*
+    One rhythm with the menu: a row is 0.625 + 1.25 + 0.625 = 2.5rem tall, the
+    same as a menu item (0.5 + 1.5 + 0.5 at text-base).
+  */}
+  <dl class="m-0 flex flex-col">
+    {
+      rows.map((row) => (
+        <div class="flex items-baseline justify-between gap-3 py-2.5 leading-5">
+          <dt class="text-[0.8125rem] text-base-content/60">{row.label}</dt>
+          <dd class="m-0 font-mono text-[0.8125rem] tabular-nums">
+            {row.value}
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>

@@ -1,0 +1,86 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Icon } from "astro-icon/components";
+import MusicPlayer from "../../components/MusicPlayer.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
+import { getTagHref } from "../../utils/tags";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: post,
+  }));
+}
+
+const post = Astro.props;
+const { Content, headings } = await render(post);
+
+const tocHeadings = headings.filter(
+  (heading) => heading.depth === 2 || heading.depth === 3,
+);
+const showToc = tocHeadings.length > 1;
+---
+
+<BaseLayout
+  pageTitle={post.data.title}
+  description={post.data.description}
+  showComments={true}
+>
+  <div
+    slot="page-header-details"
+    class="flex flex-wrap items-center justify-between gap-4"
+  >
+    <div class="flex min-w-0 flex-col gap-3">
+      <time
+        datetime={post.data.pubDate.toISOString()}
+        class="flex w-fit items-center gap-1.5 text-sm opacity-60"
+      >
+        <Icon name="lucide:calendar" aria-hidden="true" class="h-4 w-4" />
+        <span>
+          {
+            post.data.pubDate.toLocaleString("zh-CN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+          }
+        </span>
+      </time>
+
+      {
+        post.data.tags.length > 0 && (
+          <ul class="flex flex-wrap gap-2" aria-label="Article tags">
+            {post.data.tags.map((tag: string) => (
+              <li>
+                <a
+                  href={getTagHref(tag)}
+                  class="badge badge-outline no-underline transition-colors hover:badge-primary"
+                >
+                  <Icon name="lucide:tag" aria-hidden="true" class="h-3 w-3" />
+                  {tag}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+
+    {
+      post.data.music && (
+        <MusicPlayer src={post.data.music} label={post.data.musicTitle} />
+      )
+    }
+  </div>
+
+  {showToc && <TableOfContents headings={tocHeadings} />}
+
+  <article class="markdown-content">
+    <Content />
+  </article>
+</BaseLayout>

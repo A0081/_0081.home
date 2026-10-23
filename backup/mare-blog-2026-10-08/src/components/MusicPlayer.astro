@@ -1,0 +1,202 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  src: string;
+  label?: string;
+}
+
+const { src, label } = Astro.props;
+
+// Falls back to the audio file name so the player shows the track title
+// without needing any extra frontmatter.
+const labelFromSrc = (value: string): string => {
+  try {
+    const file = (value.split(/[?#]/)[0] ?? "").split("/").pop() ?? "";
+    return decodeURIComponent(file)
+      .replace(/\.[a-z0-9]+$/i, "")
+      .replace(/[_]+/g, " ")
+      .trim();
+  } catch {
+    return "";
+  }
+};
+
+const displayLabel = label?.trim() || labelFromSrc(src) || "背景音乐";
+---
+
+<div
+  data-music-player
+  data-music-src={src}
+  data-music-label={displayLabel}
+  class="flex w-full items-center gap-3 rounded-md bg-text/8 p-2 sm:w-72"
+>
+  <button
+    type="button"
+    data-music-toggle
+    aria-label={`播放 ${displayLabel}`}
+    class="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-accent text-on-accent transition-colors duration-200 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+  >
+    <Icon
+      name="lucide:play"
+      aria-hidden="true"
+      class="h-4 w-4 translate-x-px"
+      data-music-icon-play
+    />
+    <Icon
+      name="lucide:pause"
+      aria-hidden="true"
+      class="hidden h-4 w-4"
+      data-music-icon-pause
+    />
+  </button>
+
+  <div class="min-w-0 flex-1">
+    <div class="flex items-baseline justify-between gap-2">
+      <span
+        title={displayLabel}
+        class="truncate text-xs font-medium text-text"
+      >
+        {displayLabel}
+      </span>
+      <span
+        data-music-time
+        class="shrink-0 text-[0.6875rem] tabular-nums text-muted"
+      >
+        0:00 / 0:00
+      </span>
+    </div>
+    <input
+      type="range"
+      min="0"
+      max="100"
+      value="0"
+      step="0.1"
+      data-music-progress
+      aria-label={`${displayLabel} 播放进度`}
+      class="mt-1 h-4 w-full cursor-pointer accent-accent"
+    />
+  </div>
+</div>
+
+<script>
+  type MusicWindow = Window & {
+    __musicCleanup?: () => void;
+  };
+
+  const typedWindow = window as MusicWindow;
+
+  const formatTime = (seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+    const total = Math.floor(seconds);
+    const minutes = Math.floor(total / 60);
+    const rest = String(total % 60).padStart(2, "0");
+    return `${minutes}:${rest}`;
+  };
+
+  const setupMusicPlayers = () => {
+    if (typedWindow.__musicCleanup) {
+      typedWindow.__musicCleanup();
+      delete typedWindow.__musicCleanup;
+    }
+
+    const players = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-music-player]"),
+    );
+    const cleanups: (() => void)[] = [];
+
+    for (const player of players) {
+      const src = player.dataset.musicSrc;
+      const label = player.dataset.musicLabel ?? "音乐";
+      const toggle = player.querySelector<HTMLButtonElement>(
+        "[data-music-toggle]",
+      );
+      const playIcon =
+        player.querySelector<SVGElement>("[data-music-icon-play]");
+      const pauseIcon =
+        player.querySelector<SVGElement>("[data-music-icon-pause]");
+      const progress =
+        player.querySelector<HTMLInputElement>("[data-music-progress]");
+      const time = player.querySelector<HTMLElement>("[data-music-time]");
+
+      if (!src || !toggle || !progress || !time) continue;
+
+      const audio = new Audio();
+      audio.preload = "metadata";
+      audio.src = src;
+
+      const renderTime = () => {
+        const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+        time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(duration)}`;
+      };
+
+      const renderProgress = () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          progress.value = String((audio.currentTime / audio.duration) * 100);
+        }
+        renderTime();
+      };
+
+      const setPlaying = (isPlaying: boolean) => {
+        playIcon?.classList.toggle("hidden", isPlaying);
+        pauseIcon?.classList.toggle("hidden", !isPlaying);
+        toggle.setAttribute(
+          "aria-label",
+          `${isPlaying ? "暂停" : "播放"} ${label}`,
+        );
+      };
+
+      const onToggle = () => {
+        if (audio.paused) {
+          void audio.play().catch(() => setPlaying(false));
+        } else {
+          audio.pause();
+        }
+      };
+
+      const onSeek = () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          audio.currentTime = (Number(progress.value) / 100) * audio.duration;
+        }
+      };
+
+      const onEnded = () => {
+        progress.value = "0";
+        renderTime();
+      };
+
+      toggle.addEventListener("click", onToggle);
+      progress.addEventListener("input", onSeek);
+      audio.addEventListener("loadedmetadata", renderProgress);
+      audio.addEventListener("durationchange", renderProgress);
+      audio.addEventListener("timeupdate", renderProgress);
+      audio.addEventListener("play", () => setPlaying(true));
+      audio.addEventListener("pause", () => setPlaying(false));
+      audio.addEventListener("ended", onEnded);
+
+      renderTime();
+
+      cleanups.push(() => {
+        audio.pause();
+        audio.removeAttribute("src");
+        toggle.removeEventListener("click", onToggle);
+        progress.removeEventListener("input", onSeek);
+      });
+    }
+
+    typedWindow.__musicCleanup = () => {
+      for (const cleanup of cleanups) cleanup();
+    };
+  };
+
+  const cleanupMusicPlayers = () => {
+    if (typedWindow.__musicCleanup) {
+      typedWindow.__musicCleanup();
+      delete typedWindow.__musicCleanup;
+    }
+  };
+
+  document.addEventListener("astro:before-swap", cleanupMusicPlayers);
+  document.addEventListener("astro:page-load", setupMusicPlayers);
+  setupMusicPlayers();
+</script>

@@ -1,0 +1,81 @@
+---
+import { type StoreSchema } from "../content.config";
+import BaseLayout from "./BaseLayout.astro";
+import { Image } from "astro:assets";
+
+export interface Props extends StoreSchema {}
+
+const {
+  title,
+  description,
+  updatedDate,
+  heroImage,
+  pricing,
+  oldPricing,
+  checkoutUrl,
+  badge,
+  custom_link,
+  custom_link_label,
+} = Astro.props;
+
+const displayDate = updatedDate.toLocaleDateString("zh-CN", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<BaseLayout title={title} description={description} image={heroImage}>
+  <main class="md:flex md:justify-center">
+    <article
+      class="prose prose-lg w-full max-w-[46.875rem] prose-img:mx-auto"
+    >
+      {
+        heroImage && (
+          <Image
+            width={750}
+            height={422}
+            format="webp"
+            src={heroImage}
+            alt={title}
+            class="mb-6 w-full"
+          />
+        )
+      }
+      <div class="">
+        <h1 class="title my-2 text-4xl font-bold">
+          {title}
+          {badge && <div class="badge badge-secondary mx-2">{badge}</div>}
+        </h1>
+        <div class="flex place-content-between items-center">
+          <div class="grow md:grow-0">
+            <span class="mr-1 text-xl"> {pricing}</span>
+            <span class="text-md line-through opacity-50">{oldPricing}</span>
+          </div>
+          <div>
+            {
+              custom_link && (
+                <a
+                  class="btn btn-outline ml-4 grow md:grow-0"
+                  href={custom_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {custom_link_label}
+                </a>
+              )
+            }
+            <a
+              class="btn btn-primary ml-4 grow md:grow-0"
+              href={checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer">Buy Now</a
+            >
+          </div>
+        </div>
+      </div>
+      <div class="divider my-2"></div>
+      <slot />
+    </article>
+  </main>
+</BaseLayout>

@@ -1,0 +1,48 @@
+---
+import siteConfig from "@config";
+import SideBarMenu from "./SideBarMenu.astro";
+import SideBarFooter from "./SideBarFooter.astro";
+
+interface Props {
+  activeHref?: string;
+}
+
+const { activeHref } = Astro.props;
+---
+
+<div class="drawer-side z-40">
+  <label
+    for="site-drawer"
+    class="drawer-overlay"
+    aria-label="Close navigation"></label>
+  <aside
+    class="flex min-h-full w-[19rem] flex-col bg-base-200 px-2 pt-2 text-base-content"
+  >
+    <div class="mx-auto mb-6 mt-5 w-fit">
+      <a href="/" class="block" aria-label={`${siteConfig.author} home`}>
+        <div
+          class="avatar m-auto block transition ease-in-out hover:scale-[102%]"
+        >
+          <div class="w-[8.5rem] rounded-full">
+            <img
+              src={siteConfig.avatar}
+              alt={siteConfig.author}
+              width="300"
+              height="300"
+              loading="eager"
+            />
+          </div>
+        </div>
+      </a>
+      <p class="mt-4 mb-1 text-center text-lg font-bold">
+        {siteConfig.author}
+      </p>
+      <p class="mx-auto max-w-[15rem] text-center text-sm opacity-70">
+        {siteConfig.authorBio}
+      </p>
+    </div>
+
+    <SideBarMenu activeHref={activeHref} />
+    <SideBarFooter />
+  </aside>
+</div>

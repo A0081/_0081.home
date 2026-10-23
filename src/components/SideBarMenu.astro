@@ -1,0 +1,107 @@
+---
+interface Props {
+  sideBarActiveItemID?: string;
+  /** default = template, a = icon menu, b = starpod-style cards */
+  variant?: "default" | "a" | "b";
+}
+
+const { sideBarActiveItemID, variant = "default" } = Astro.props;
+
+const navItems = [
+  { id: "about", href: "/about", label: "关于", icon: "user" },
+  { id: "projects", href: "/projects", label: "项目", icon: "folder" },
+  // Hidden while /store/ is still template scaffolding. The route and its
+  // content stay in place, so this is the only line to restore it.
+  // { id: "store", href: "/store", label: "商店", icon: "bag" },
+  { id: "blog", href: "/blog/", label: "思想&方法", icon: "file" },
+  { id: "journal", href: "/journal", label: "闪念", icon: "pen" },
+  { id: "tags", href: "/blog/tag/", label: "标签", icon: "tag" },
+];
+
+const icons: Record<string, string> = {
+  user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  folder:
+    '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+};
+
+const activeClass =
+  variant === "a"
+    ? "bg-primary text-primary-content font-semibold"
+    : variant === "b"
+      ? "bg-base-200 font-semibold text-accent-text"
+      : "bg-base-300";
+---
+
+{
+  variant === "b" ? (
+    <nav class="m-2 rounded-lg bg-base-100 px-2 py-2">
+      <p class="px-3 pb-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-base-content/45">
+        菜单
+      </p>
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          id={item.id}
+          class="nav-underline flex items-center gap-2.5 px-3 py-2 text-base text-base-content/80 no-underline transition-colors duration-200 hover:text-base-content"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="h-4 w-4 shrink-0 opacity-60"
+            set:html={icons[item.icon]}
+          />
+          <span>{item.label}</span>
+        </a>
+      ))}
+    </nav>
+  ) : (
+    <ul class="menu menu-md w-full grow shrink overflow-y-auto">
+      {navItems.map((item) => (
+        <li>
+          <a href={item.href} id={item.id} class="py-3 text-base">
+            {variant === "a" && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="h-4 w-4 shrink-0"
+                set:html={icons[item.icon]}
+              />
+            )}
+            <span>{item.label}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<script
+  define:vars={{
+    sideBarActiveItemID: sideBarActiveItemID,
+    activeClass: activeClass,
+  }}
+>
+  const activeItemElem = document.getElementById(sideBarActiveItemID);
+  if (activeItemElem) {
+    activeClass
+      .split(/\s+/)
+      .filter(Boolean)
+      .forEach((name) => activeItemElem.classList.add(name));
+  }
+</script>

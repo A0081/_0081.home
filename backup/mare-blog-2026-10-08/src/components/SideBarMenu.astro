@@ -1,0 +1,36 @@
+---
+import siteConfig from "@config";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  activeHref?: string;
+}
+
+const { activeHref } = Astro.props;
+const normalize = (href: string) => href.replace(/\/$/, "") || "/";
+const current = activeHref ?? "/";
+---
+
+<ul class="menu menu-md grow shrink overflow-y-auto">
+  {
+    siteConfig.nav.map((item) => {
+      const isActive = normalize(item.href) === normalize(current);
+
+      return (
+        <li>
+          <a
+            href={item.href}
+            aria-current={isActive ? "page" : undefined}
+            class:list={[
+              "py-3 text-base",
+              isActive && "bg-base-300 font-semibold",
+            ]}
+          >
+            {item.icon && <Icon name={item.icon} class="h-4 w-4" />}
+            <span>{item.name}</span>
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>

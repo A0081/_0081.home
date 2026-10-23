@@ -1,0 +1,62 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import SideBar from "../components/SideBar.astro";
+import BackToTop from "../components/BackToTop.astro";
+import { ClientRouter } from "astro:transitions";
+
+import { SITE_TITLE, SITE_DESCRIPTION, TRANSITION_API } from "../config";
+
+const {
+  image,
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  includeSidebar = true,
+  sideBarActiveItemID,
+  ogType,
+  fullWidth = false,
+  hideFooter = false,
+  sidebarVariant = "b",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      ogType={ogType}
+    />
+    {TRANSITION_API && <ClientRouter />}
+  </head>
+  <body>
+    <div class="drawer bg-base-100 lg:drawer-open">
+      <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content bg-base-100">
+        <Header title={SITE_TITLE} />
+        <div class={fullWidth ? "" : "md:flex md:justify-center"}>
+          <main
+            class={fullWidth
+              ? "w-full max-w-[100vw]"
+              : "w-full max-w-[100vw] p-6 pt-10 lg:max-w-[56.25rem] lg:pt-12"}
+          >
+            <slot />
+          </main>
+        </div>
+        {!hideFooter && <Footer />}
+      </div>
+      {
+        includeSidebar && (
+          <SideBar
+            sideBarActiveItemID={sideBarActiveItemID}
+            variant={sidebarVariant}
+          />
+        )
+      }
+    </div>
+    <BackToTop />
+  </body>
+</html>

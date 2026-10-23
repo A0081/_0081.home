@@ -1,0 +1,107 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { splitJournalContent } from "../utils/journal";
+
+interface TimelineItem {
+  entry: CollectionEntry<"journal">;
+  preview: string;
+}
+
+interface TimelineGroup {
+  year: number;
+  count: number;
+  items: TimelineItem[];
+}
+
+const entries = (await getCollection("journal")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const groups: TimelineGroup[] = [];
+
+for (const entry of entries) {
+  const { preview } = splitJournalContent(entry.rendered?.html ?? "");
+  const year = entry.data.pubDate.getFullYear();
+  const lastGroup = groups[groups.length - 1];
+
+  if (lastGroup && lastGroup.year === year) {
+    lastGroup.items.push({ entry, preview });
+    lastGroup.count += 1;
+  } else {
+    groups.push({ year, count: 1, items: [{ entry, preview }] });
+  }
+}
+---
+
+<BaseLayout title="闪念" sideBarActiveItemID="journal">
+  <div class="mb-8">
+    <div class="w-full text-3xl font-bold">闪念</div>
+  </div>
+
+  {
+    groups.length > 0 ? (
+      <div>
+        {groups.map((group) => (
+          <section class="mb-10 last:mb-0">
+            <div class="mb-4 flex items-center gap-2">
+              <h2
+                id={`year-${group.year}`}
+                class="scroll-mt-24 text-xl font-bold"
+              >
+                {group.year}
+              </h2>
+              <span class="rounded bg-base-200 px-1.5 py-0.5 text-[0.6875rem] leading-none font-medium text-base-content/60">
+                {group.count}
+              </span>
+            </div>
+
+            <div class="time-line-container">
+              {group.items.map(({ entry, preview }) => (
+                <div class="grid grid-cols-[4.5rem_1rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[6rem_1.25rem_minmax(0,1fr)] sm:gap-x-4">
+                  <time
+                    datetime={entry.data.pubDate.toISOString()}
+                    class="pt-0.5 text-right text-xs leading-5 whitespace-nowrap text-base-content/60 sm:text-sm"
+                  >
+                    {entry.data.pubDate.toLocaleDateString("zh-CN", {
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </time>
+
+                  <div class="education__time relative flex justify-center">
+                    <span
+                      aria-hidden="true"
+                      class="education__line absolute top-3 -bottom-0.5 left-1/2 w-px -translate-x-1/2 bg-base-300"
+                    />
+                    <span class="relative z-10 mt-1 h-3 w-3 shrink-0 rounded-full bg-primary" />
+                  </div>
+
+                  <div class="min-w-0 pb-7">
+                    <h3 class="mb-1 text-lg leading-snug font-semibold">
+                      <a
+                        href={`/journal/${entry.id}`}
+                        class="text-base-content no-underline transition-colors hover:text-accent-text"
+                      >
+                        {entry.data.title}
+                      </a>
+                    </h3>
+
+                    {preview && (
+                      /* Images stay out of the list; they show on the entry page. */
+                      <div class="prose prose-sm max-w-none [&_img]:hidden">
+                        <Fragment set:html={preview} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="text-sm text-base-content/60">还没有闪念。</p>
+    )
+  }
+</BaseLayout>

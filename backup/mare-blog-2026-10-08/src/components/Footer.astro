@@ -1,0 +1,33 @@
+---
+import siteConfig from "@config";
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="footer footer-center mt-10 mb-5 block">
+  <div class="pb-2 text-sm opacity-70">
+    © {currentYear}&nbsp;
+    <a
+      href={siteConfig.authorUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="font-semibold hover:underline"
+    >
+      {siteConfig.author}
+    </a>
+  </div>
+  <div class="inline text-sm opacity-70">
+    Theme by <a
+      href="https://github.com/manuelernestog/astrofy"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="font-bold">Astrofy</a
+    >, built with
+    <a
+      href="https://astro.build"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="font-bold">Astro</a
+    >
+  </div>
+</footer>

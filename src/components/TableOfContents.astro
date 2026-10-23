@@ -1,0 +1,214 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  label?: string;
+}
+
+const { headings, label = "目录" } = Astro.props;
+const items = headings.filter(
+  (heading) => heading.depth === 2 || heading.depth === 3,
+);
+---
+
+{
+  items.length > 1 && (
+    <>
+      {/*
+        Wide screens: a sticky rail in the column the layout puts beside the
+        article. It scrolls with the page, so nothing floats and nothing has to
+        be opened.
+      */}
+      <aside class="toc-rail hidden xl:block" data-toc-rail aria-label={label}>
+        <p class="toc-rail-title">{label}</p>
+        <nav>
+          <ul class="toc-rail-nav">
+            {items.map((heading) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-toc-link
+                  class:list={[heading.depth === 3 && "is-sub"]}
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+
+      {/* Narrow screens: the same list, collapsed above the article. */}
+      <details
+        id="article-toc"
+        class="group mb-6 rounded-lg bg-base-200 xl:hidden"
+      >
+        <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-base-content select-none [&::-webkit-details-marker]:hidden">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M8 6h13" />
+            <path d="M8 12h13" />
+            <path d="M8 18h13" />
+            <path d="M3 6h.01" />
+            <path d="M3 12h.01" />
+            <path d="M3 18h.01" />
+          </svg>
+          <span>{label}</span>
+          <svg
+            class="ml-auto h-4 w-4 shrink-0 opacity-60 transition-transform duration-200 group-open:rotate-180"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+
+        <nav aria-label={label} class="px-3 pb-3">
+          <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
+            {items.map((heading) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-toc-link
+                  class:list={[
+                    "block rounded-md px-3 py-1.5 text-[0.8125rem] leading-snug text-base-content/80 no-underline transition-colors hover:bg-base-content/8 hover:text-accent-text",
+                    heading.depth === 3 && "pl-7",
+                  ]}
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </details>
+    </>
+  )
+}
+
+<script>
+  type TocWindow = Window & { __tocCleanup?: () => void };
+
+  // How far below the viewport top a heading counts as "reached"; clears the
+  // sticky mobile header and leaves a little air.
+  const ACTIVE_OFFSET = 96;
+
+  const setupToc = () => {
+    const typedWindow = window as TocWindow;
+    typedWindow.__tocCleanup?.();
+
+    const cleanups: Array<() => void> = [];
+
+    // Narrow screens: jumping to a heading closes the collapsed list again.
+    const details = document.getElementById("article-toc");
+    if (details) {
+      const onClick = (event: Event) => {
+        const target = event.target as Element | null;
+        const link = target?.closest?.("a[data-toc-link]");
+        if (!(link instanceof HTMLAnchorElement)) return;
+
+        const hash = link.getAttribute("href");
+        if (!hash || !hash.startsWith("#")) return;
+        const heading = document.getElementById(hash.slice(1));
+        if (!heading) return;
+
+        event.preventDefault();
+
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        heading.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "start",
+        });
+        history.pushState(null, "", hash);
+
+        if (details instanceof HTMLDetailsElement) details.open = false;
+      };
+
+      details.addEventListener("click", onClick);
+      cleanups.push(() => details.removeEventListener("click", onClick));
+    }
+
+    // Wide screens: mark the heading the reader has scrolled past.
+    const rail = document.querySelector("[data-toc-rail]");
+    if (rail) {
+      const links = Array.from(
+        rail.querySelectorAll<HTMLAnchorElement>("a[data-toc-link]"),
+      );
+      const targets = links
+        .map((link) => {
+          const hash = link.getAttribute("href") ?? "";
+          return hash.startsWith("#")
+            ? document.getElementById(hash.slice(1))
+            : null;
+        })
+        .filter((el): el is HTMLElement => el !== null);
+
+      if (targets.length > 0) {
+        let frame = 0;
+
+        const sync = () => {
+          frame = 0;
+          let active = targets[0];
+          for (const target of targets) {
+            if (target.getBoundingClientRect().top - ACTIVE_OFFSET > 0) break;
+            active = target;
+          }
+          for (const link of links) {
+            link.classList.toggle(
+              "is-active",
+              link.getAttribute("href") === `#${active.id}`,
+            );
+          }
+        };
+
+        const request = () => {
+          if (frame) return;
+          frame = window.requestAnimationFrame(sync);
+        };
+
+        window.addEventListener("scroll", request, { passive: true });
+        window.addEventListener("resize", request, { passive: true });
+        cleanups.push(() => {
+          window.removeEventListener("scroll", request);
+          window.removeEventListener("resize", request);
+          if (frame) window.cancelAnimationFrame(frame);
+        });
+
+        sync();
+      }
+    }
+
+    typedWindow.__tocCleanup = () => cleanups.forEach((fn) => fn());
+  };
+
+  document.addEventListener("astro:before-swap", () => {
+    const typedWindow = window as TocWindow;
+    typedWindow.__tocCleanup?.();
+    delete typedWindow.__tocCleanup;
+  });
+  document.addEventListener("astro:page-load", setupToc);
+  setupToc();
+</script>

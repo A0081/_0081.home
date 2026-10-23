@@ -1,0 +1,66 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Icon } from "astro-icon/components";
+import { stripJournalTitle } from "../../utils/journal";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("journal");
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: entry,
+  }));
+}
+
+const entry = Astro.props;
+const { Content } = await render(entry);
+
+// Entries often repeat their title as a leading `#` heading; the page header
+// already shows it, so the duplicate is dropped here.
+const renderedHtml = entry.rendered?.html;
+const bodyHtml = renderedHtml ? stripJournalTitle(renderedHtml) : "";
+---
+
+<BaseLayout pageTitle={entry.data.title} showComments={true}>
+  <a
+    slot="page-header-prefix"
+    href="/journal"
+    class="inline-flex items-center gap-1 text-sm font-medium text-muted transition-colors duration-200 hover:text-accent-strong"
+  >
+    <Icon name="lucide:arrow-left" aria-hidden="true" class="h-3.5 w-3.5" />
+    <span>返回闪念</span>
+  </a>
+
+  <div slot="page-header-details">
+    <time
+      datetime={entry.data.pubDate.toISOString()}
+      class="mr-auto flex inline-flex items-center gap-1 rounded-md bg-text/8 p-2 text-sm font-medium text-muted dark:text-text/80"
+    >
+      <Icon
+        name="lucide:calendar"
+        aria-hidden="true"
+        class="mr-1 h-3.5 w-3.5 shrink-0"
+      />
+      <span>
+        {
+          entry.data.pubDate.toLocaleString("zh-CN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
+        }
+      </span>
+    </time>
+  </div>
+
+  {
+    (renderedHtml ? bodyHtml : true) && (
+      <article class="markdown-content rounded-lg bg-surface p-5 shadow-sm sm:p-8 lg:p-12">
+        {renderedHtml ? <Fragment set:html={bodyHtml} /> : <Content />}
+      </article>
+    )
+  }
+</BaseLayout>

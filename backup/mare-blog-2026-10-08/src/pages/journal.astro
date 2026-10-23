@@ -1,0 +1,170 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import YearJumpNav from "../components/YearJumpNav.astro";
+import { Icon } from "astro-icon/components";
+import { getJournalHref, splitJournalContent } from "../utils/journal";
+
+interface TimelineItem {
+  entry: CollectionEntry<"journal">;
+  href: string;
+  preview: string;
+  rest: string;
+}
+
+interface TimelineGroup {
+  year: number;
+  count: number;
+  items: TimelineItem[];
+}
+
+const entries = (await getCollection("journal")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const groups: TimelineGroup[] = [];
+
+for (const entry of entries) {
+  const { preview, rest } = splitJournalContent(entry.rendered?.html ?? "");
+  const item: TimelineItem = {
+    entry,
+    href: getJournalHref(entry),
+    preview,
+    rest,
+  };
+  const year = entry.data.pubDate.getFullYear();
+  const lastGroup = groups[groups.length - 1];
+
+  if (lastGroup && lastGroup.year === year) {
+    lastGroup.items.push(item);
+    lastGroup.count += 1;
+  } else {
+    groups.push({ year, count: 1, items: [item] });
+  }
+}
+
+const yearSummaries = groups.map((group) => ({
+  year: group.year,
+  count: group.count,
+}));
+---
+
+<BaseLayout
+  pageTitle="闪念"
+  description="随手记下的片段与念头。"
+>
+  {
+    groups.length > 0 ? (
+      <div class="lg:grid lg:grid-cols-[6rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <YearJumpNav years={yearSummaries} />
+
+        <ol class="space-y-10 rounded-lg bg-surface p-5 shadow-sm sm:p-8 lg:p-12">
+          {groups.map((group, groupIndex) => (
+            <>
+              <li
+                id={`year-${group.year}`}
+                data-year-section={group.year}
+                class="grid scroll-mt-24 grid-cols-[6rem_1rem_minmax(0,1fr)] items-center gap-x-2 sm:grid-cols-[8.5rem_1.5rem_minmax(0,1fr)] sm:gap-x-4"
+              >
+                <span class="flex items-center justify-end gap-1.5">
+                  <span class="text-sm font-semibold text-muted sm:text-base">
+                    {group.year}
+                  </span>
+                  <span class="rounded bg-background px-1.5 py-0.5 text-[0.6875rem] leading-none font-medium text-muted">
+                    {group.count}
+                  </span>
+                </span>
+                <div class="relative flex h-full justify-center">
+                  <span
+                    aria-hidden="true"
+                    class="absolute top-0 -bottom-10 left-1/2 w-px -translate-x-1/2 bg-border"
+                  />
+                  <span class="relative z-10 h-3 w-3 self-center rounded-full bg-accent" />
+                </div>
+                <span
+                  aria-hidden="true"
+                  class="h-px w-full bg-border"
+                />
+              </li>
+
+              {group.items.map(({ entry, href, preview, rest }, index) => (
+                <li class="grid grid-cols-[6rem_1rem_minmax(0,1fr)] items-stretch gap-x-2 sm:grid-cols-[8.5rem_1.5rem_minmax(0,1fr)] sm:gap-x-4">
+                  <time
+                    datetime={entry.data.pubDate.toISOString()}
+                    class="pt-1 text-right text-[0.6875rem] leading-5 whitespace-nowrap text-muted sm:text-sm"
+                  >
+                    <span class="inline-block">
+                      {entry.data.pubDate.toLocaleDateString("zh-CN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                    <span class="ml-2 inline-block">
+                      {entry.data.pubDate.toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
+                    </span>
+                  </time>
+
+                  <div class="relative flex justify-center">
+                    {!(
+                      groupIndex === groups.length - 1 &&
+                      index === group.items.length - 1
+                    ) && (
+                      <span
+                        aria-hidden="true"
+                        class="absolute top-3 -bottom-10 left-1/2 w-px -translate-x-1/2 bg-border"
+                      />
+                    )}
+                    <span class="relative z-10 mt-1 h-3 w-3 rounded-full border-[3px] border-accent bg-surface" />
+                  </div>
+
+                  <article class="min-w-0 pb-1">
+                    <a href={href} class="group/journal-title inline-block">
+                      <h2 class="mb-3 text-xl font-semibold text-text transition-colors duration-200 group-hover/journal-title:text-accent-strong">
+                        {entry.data.title}
+                      </h2>
+                    </a>
+
+                    {preview && (
+                      <div class="markdown-content">
+                        <Fragment set:html={preview} />
+                      </div>
+                    )}
+
+                    {rest && (
+                      <details class="group mt-1">
+                        <summary class="-ml-2 inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-accent-strong transition-colors duration-200 select-none hover:bg-accent/10 [&::-webkit-details-marker]:hidden">
+                          <Icon
+                            name="lucide:chevron-down"
+                            aria-hidden="true"
+                            class="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-open:rotate-180"
+                          />
+                          <span class="group-open:hidden">展开全文</span>
+                          <span class="hidden group-open:inline">收起</span>
+                        </summary>
+                        <div class="markdown-content mt-3">
+                          <Fragment set:html={rest} />
+                        </div>
+                      </details>
+                    )}
+                  </article>
+                </li>
+              ))}
+            </>
+          ))}
+        </ol>
+      </div>
+    ) : (
+      <section class="rounded-lg bg-surface p-5 shadow-sm sm:p-8 lg:p-12">
+        <p class="text-sm text-muted">
+          No journal entries yet. Add a Markdown file in
+          <code>src/content/journal/</code> to begin.
+        </p>
+      </section>
+    )
+  }
+</BaseLayout>
