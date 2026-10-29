@@ -32,10 +32,6 @@ const {
     {TRANSITION_API && <ClientRouter />}
   </head>
   <body>
-    <!-- Navigation progress bar. Persisted so it survives the swap it is
-         reporting on, and only shown when a navigation actually takes long
-         enough to be worth acknowledging. -->
-    <div id="nav-progress" aria-hidden="true" transition:persist></div>
     <div class="drawer bg-base-100 lg:drawer-open">
       <input id="my-drawer" type="checkbox" class="drawer-toggle" />
       <div class="drawer-content bg-base-100">
@@ -61,29 +57,5 @@ const {
     </div>
     <BackToTop />
 
-    <script>
-      /*
-       * Drive the top progress bar from the router's lifecycle. The bar element
-       * is persisted across swaps, so the flag on the element keeps this from
-       * binding the listeners more than once.
-       *
-       * No timers here on purpose: the "don't flash on instant navigations"
-       * delay lives in the CSS as a transition-delay, which means a prefetched
-       * or prerendered swap never paints the bar at all.
-       */
-      const bar = document.getElementById("nav-progress");
-
-      if (bar && bar.dataset.navProgressReady !== "true") {
-        bar.dataset.navProgressReady = "true";
-
-        document.addEventListener("astro:before-preparation", () => {
-          bar.classList.add("is-loading");
-        });
-
-        document.addEventListener("astro:page-load", () => {
-          bar.classList.remove("is-loading");
-        });
-      }
-    </script>
   </body>
 </html>
