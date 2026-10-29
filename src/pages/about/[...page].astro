@@ -6,7 +6,13 @@ import createSlug from "../../lib/createSlug";
 
 export async function getStaticPaths({ paginate }) {
   const entries = await getCollection("about");
-  entries.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+  // Curated order, not chronological: `order` decides, and pubDate only breaks
+  // ties. Entries without an `order` default to 99, so they land at the end.
+  entries.sort(
+    (a, b) =>
+      a.data.order - b.data.order ||
+      b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  );
   return paginate(entries, { pageSize: 10 });
 }
 

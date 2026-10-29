@@ -2,6 +2,7 @@
 title: "我想做的事"
 description: "这里记录的是我的爱好"
 pubDate: 2026-10-01
+order: 5
 ---
 - 练字
 - 健身

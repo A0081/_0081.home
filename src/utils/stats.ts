@@ -16,8 +16,11 @@ export interface SiteStats {
  * stripped first so fences, link targets and punctuation are not counted as
  * prose.
  */
-export function countWords(markdown: string): number {
-  const text = markdown
+export function countWords(markdown: string | undefined | null): number {
+  // An entry is allowed to be frontmatter-only (a stub waiting to be written).
+  // That should count as zero words rather than taking the whole build down —
+  // this runs in the sidebar, so it executes on every page.
+  const text = (markdown ?? "")
     .replace(/^---[\s\S]*?\n---\n?/, "")
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`[^`]*`/g, " ")

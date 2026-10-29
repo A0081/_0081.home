@@ -48,10 +48,17 @@ const projectSchema = z.object({
   badge: z.string().optional(),
 });
 
+/**
+ * About entries are blog-shaped plus an explicit `order`. The section is
+ * curated rather than chronological, so the reading order is something I set
+ * by hand. Entries without an `order` fall to the end (99) instead of jumping
+ * to the top, where a missing value would be easy to miss.
+ */
+const aboutSchema = blogSchema.extend({ order: z.number().default(99) });
+
 export type BlogSchema = z.infer<typeof blogSchema>;
 export type StoreSchema = z.infer<typeof storeSchema>;
-/** About entries use the same shape as blog posts. */
-export type AboutSchema = BlogSchema;
+export type AboutSchema = z.infer<typeof aboutSchema>;
 export type JournalSchema = z.infer<typeof journalSchema>;
 export type ProjectSchema = z.infer<typeof projectSchema>;
 
@@ -66,7 +73,7 @@ export const collections = {
   }),
   about: defineCollection({
     loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/about" }),
-    schema: blogSchema,
+    schema: aboutSchema,
   }),
   journal: defineCollection({
     loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/journal" }),

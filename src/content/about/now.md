@@ -2,6 +2,7 @@
 title: "我在做什么"
 description: "最近在学什么、做什么。"
 pubDate: 2026-10-03
+order: 6
 ---
 
 我现在正在做什么
