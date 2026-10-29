@@ -1,11 +1,10 @@
 ---
 interface Props {
-  sideBarActiveItemID?: string;
   /** default = template, a = icon menu, b = starpod-style cards */
   variant?: "default" | "a" | "b";
 }
 
-const { sideBarActiveItemID, variant = "default" } = Astro.props;
+const { variant = "default" } = Astro.props;
 
 // Trailing slashes are deliberate: the built pages are `/about/index.html`, so
 // `/about` costs a 301 before the real request. On a high-latency edge that
@@ -94,17 +93,33 @@ const activeClass =
   )
 }
 
-<script
-  define:vars={{
-    sideBarActiveItemID: sideBarActiveItemID,
-    activeClass: activeClass,
-  }}
->
-  const activeItemElem = document.getElementById(sideBarActiveItemID);
-  if (activeItemElem) {
-    activeClass
-      .split(/\s+/)
-      .filter(Boolean)
-      .forEach((name) => activeItemElem.classList.add(name));
-  }
+<script define:vars={{ activeClass }}>
+  // The sidebar is persisted across navigations (see BaseLayout), so this script
+  // runs once. The highlight therefore has to be derived from the URL instead of
+  // being baked in per page, and repainted after each client-side navigation.
+  //
+  // Order matters: "/blog/tag/..." must resolve to `tags`, not `blog`.
+  const ACTIVE = activeClass.split(/\s+/).filter(Boolean);
+  const ITEMS = ["about", "blog", "projects", "journal", "tags"];
+
+  const resolve = (path) => {
+    if (path.startsWith("/about")) return "about";
+    if (path.startsWith("/blog/tag")) return "tags";
+    if (path.startsWith("/blog")) return "blog";
+    if (path.startsWith("/projects")) return "projects";
+    if (path.startsWith("/journal")) return "journal";
+    return null;
+  };
+
+  const paint = () => {
+    const active = resolve(location.pathname);
+    for (const id of ITEMS) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      for (const name of ACTIVE) el.classList.toggle(name, id === active);
+    }
+  };
+
+  paint();
+  document.addEventListener("astro:page-load", paint);
 </script>

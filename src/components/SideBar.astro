@@ -6,7 +6,6 @@ import { Image } from "astro:assets";
 import { SITE_AUTHOR, SITE_AUTHOR_BIO } from "../config";
 
 interface Props {
-  sideBarActiveItemID?: string;
   /**
    * default = template sidebar
    * a       = same column, menu gains icons and a stronger active state
@@ -15,10 +14,10 @@ interface Props {
   variant?: "default" | "a" | "b";
 }
 
-const { sideBarActiveItemID, variant = "default" } = Astro.props;
+const { variant = "default" } = Astro.props;
 ---
 
-<div class="drawer-side z-40">
+<div class="drawer-side z-40" transition:persist>
   <label for="my-drawer" class="drawer-overlay"></label>
 
   {
@@ -44,7 +43,6 @@ const { sideBarActiveItemID, variant = "default" } = Astro.props;
         </div>
 
         <SideBarMenu
-          sideBarActiveItemID={sideBarActiveItemID}
           variant="b"
         />
 
@@ -78,7 +76,6 @@ const { sideBarActiveItemID, variant = "default" } = Astro.props;
         <div class="mx-3 mb-2 border-t border-base-300"></div>
 
         <SideBarMenu
-          sideBarActiveItemID={sideBarActiveItemID}
           variant={variant}
         />
         <SideBarFooter />

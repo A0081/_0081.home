@@ -322,11 +322,18 @@ html:has(.home-slideshow) {
 }
 
 /*
- * Theme switching runs through the View Transitions API. Scoping this to the
- * class the toggle adds means page navigations keep their default cross-fade.
+ * No cross-fade on page navigation.
+ *
+ * The browser's default for a view transition is a ~250ms cross-fade, and the
+ * router used to leave that default in place — so every click felt like it
+ * waited a beat even though the HTML was already prefetched. The swap itself
+ * is still a client-side swap (no reload); it just happens instantly now, which
+ * is what a docs-style site feels like.
+ *
+ * The theme toggle drives the same API, so it gets the same instant switch.
  */
-html.theme-transition::view-transition-old(root),
-html.theme-transition::view-transition-new(root) {
+::view-transition-old(root),
+::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }

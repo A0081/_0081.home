@@ -106,7 +106,10 @@
       Math.max(y, window.innerHeight - y),
     );
 
-    document.documentElement.classList.add("theme-transition");
+    // The `theme-transition` class used to suppress the default cross-fade so
+    // only the circular reveal below showed. global.css now disables the
+    // cross-fade for every view transition, so the class is gone and the
+    // reveal runs as a plain Web Animation (which outranks CSS `animation`).
     const transition = startViewTransition.call(document, () =>
       applyTheme(theme),
     );
@@ -129,12 +132,6 @@
       })
       .catch(() => {
         // If the reveal cannot be animated the palette has already changed.
-      });
-
-    transition.finished
-      .catch(() => {})
-      .finally(() => {
-        document.documentElement.classList.remove("theme-transition");
       });
   };
 

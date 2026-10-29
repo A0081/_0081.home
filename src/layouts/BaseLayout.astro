@@ -13,7 +13,6 @@ const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
   includeSidebar = true,
-  sideBarActiveItemID,
   ogType,
   fullWidth = false,
   hideFooter = false,
@@ -51,7 +50,6 @@ const {
       {
         includeSidebar && (
           <SideBar
-            sideBarActiveItemID={sideBarActiveItemID}
             variant={sidebarVariant}
           />
         )

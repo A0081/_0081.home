@@ -27,7 +27,7 @@ export async function getStaticPaths({ paginate }) {
 const { page, tagName } = Astro.props;
 ---
 
-<BaseLayout title={"文章 - " + tagName} sideBarActiveItemID="tags">
+<BaseLayout title={"文章 - " + tagName}>
   <div class="mb-5">
     <div class="w-full text-3xl font-bold">文章 - {tagName}</div>
     <a
