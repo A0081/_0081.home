@@ -486,3 +486,52 @@ html:has(.home-slideshow) {
     transition: none;
   }
 }
+
+/*
+ * Journal timeline rows: the whole row is the link target, not just the title.
+ *
+ * The overlay belongs to the title link and stretches over the row, which is
+ * possible because the row is the positioned ancestor. It needs a z-index
+ * because the excerpt comes later in the DOM and would otherwise paint on top.
+ * Links inside the excerpt sit above the overlay so they still win where they
+ * are.
+ */
+.journal-row {
+  position: relative;
+}
+
+.journal-row > h3 > a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.journal-row .prose a {
+  position: relative;
+  z-index: 2;
+}
+
+/*
+ * Card listings (articles, about, projects): the card is the link target.
+ *
+ * The title carries the real link and its ::after stretches over the card, so
+ * clicking the image, the excerpt or the empty space around them all follow the
+ * same link. Tag badges are siblings of the title, not nested inside it, and
+ * are lifted above the overlay so each remains its own target.
+ */
+.content-card {
+  position: relative;
+}
+
+.content-card .card-title-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.content-card .card-actions a {
+  position: relative;
+  z-index: 2;
+}

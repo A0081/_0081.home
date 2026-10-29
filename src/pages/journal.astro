@@ -77,8 +77,16 @@ for (const entry of entries) {
                     <span class="relative z-10 mt-1 h-3 w-3 shrink-0 rounded-full bg-primary" />
                   </div>
 
-                  <div class="min-w-0 pb-7">
+                  <div class="journal-row min-w-0 pb-7">
                     <h3 class="mb-1 text-lg leading-snug font-semibold">
+                      {/*
+                        The whole row is the click target. `after:absolute
+                        after:inset-0` stretches this link over the positioned
+                        wrapper, so the preview text below it is clickable as
+                        well — not just the title. Links inside the preview are
+                        lifted above the overlay, so they still win where they
+                        sit.
+                      */}
                       <a
                         href={`/journal/${entry.id}/`}
                         class="text-base-content no-underline transition-colors hover:text-accent-text"
