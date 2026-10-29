@@ -31,7 +31,13 @@ const holdSeconds = 4;
     >
       {
         photos.map((photo, index) => (
-          <span class:list={["home-slide", index === 0 && "is-active"]}>
+          <span
+            class:list={[
+              "home-slide",
+              index === 0 && "is-active",
+              index === 1 && "is-next",
+            ]}
+          >
             <Image
               src={photo}
               alt=""
@@ -75,10 +81,25 @@ const holdSeconds = 4;
   .home-slide {
     position: absolute;
     inset: 18px;
-    display: block;
+    /*
+     * Only the slides about to be seen are rendered. Every slide used to be
+     * display:block and merely transparent, which put all of them inside the
+     * viewport and made `loading="lazy"` a no-op — a phone downloaded every
+     * wallpaper before showing the first one.
+     *
+     * `.is-prev` keeps the outgoing slide painted long enough for its 0.5s
+     * fade-out to finish.
+     */
+    display: none;
     overflow: hidden;
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
+  }
+
+  .home-slide.is-active,
+  .home-slide.is-next,
+  .home-slide.is-prev {
+    display: block;
   }
 
   .home-slide.is-active {
@@ -142,8 +163,15 @@ const holdSeconds = 4;
 
     const show = (next: number) => {
       index = (next + slides.length) % slides.length;
+      const total = slides.length;
+      const nextIndex = (index + 1) % total;
+      const prevIndex = (index - 1 + total) % total;
       slides.forEach((slide, i) => {
+        // Only these three stay display:block, so at most three photos are ever
+        // fetched while the show runs.
         slide.classList.toggle("is-active", i === index);
+        slide.classList.toggle("is-next", i === nextIndex);
+        slide.classList.toggle("is-prev", i === prevIndex);
       });
     };
 

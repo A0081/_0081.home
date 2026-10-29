@@ -48,6 +48,7 @@ const activeClass =
         <a
           href={item.href}
           id={item.id}
+          data-astro-prefetch="load"
           class="nav-underline flex items-center gap-2.5 px-3 py-2 text-base text-base-content/80 no-underline transition-colors duration-200 hover:text-base-content"
         >
           <svg
@@ -70,7 +71,12 @@ const activeClass =
     <ul class="menu menu-md w-full grow shrink overflow-y-auto">
       {navItems.map((item) => (
         <li>
-          <a href={item.href} id={item.id} class="py-3 text-base">
+          <a
+            href={item.href}
+            id={item.id}
+            data-astro-prefetch="load"
+            class="py-3 text-base"
+          >
             {variant === "a" && (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
