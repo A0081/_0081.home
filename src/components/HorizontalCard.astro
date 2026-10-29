@@ -1,7 +1,9 @@
 ---
 const { title, img, desc, url, badge, tags, target = "_blank" } = Astro.props;
 import { Image } from "astro:assets";
-const tag_url = url.split("/").slice(0, -1).join("/") + "/tag";
+// `url` may or may not end in a slash (the listings now emit the canonical
+// trailing-slash form). Strip it first so the tag base stays `/blog/tag`.
+const tag_url = url.replace(/\/$/, "").split("/").slice(0, -1).join("/") + "/tag";
 ---
 
 <div
@@ -17,7 +19,7 @@ const tag_url = url.split("/").slice(0, -1).join("/") + "/tag";
             height={422}
             format="webp"
             alt={title}
-            class="max-w-full rounded-lg md:max-w-[13rem]"
+            class="h-auto max-w-full rounded-lg md:max-w-[13rem]"
           />
         )
       }
@@ -31,7 +33,10 @@ const tag_url = url.split("/").slice(0, -1).join("/") + "/tag";
           {
             tags &&
               tags.map((tag) => (
-                <a href={`${tag_url}/${tag}`} class="badge badge-outline">
+                <a
+                  href={`${tag_url}/${encodeURIComponent(tag)}/`}
+                  class="badge badge-outline"
+                >
                   {tag}
                 </a>
               ))

@@ -65,7 +65,7 @@ const displayDate = pubDate
             tags &&
               tags.map((tag) => (
                 <a
-                  href={`/blog/tag/${tag}`}
+                  href={`/blog/tag/${encodeURIComponent(tag)}/`}
                   class="badge badge-outline no-underline"
                 >
                   {tag}

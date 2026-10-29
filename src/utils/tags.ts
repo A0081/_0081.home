@@ -24,7 +24,9 @@ export function getTagSlug(tag: string): string {
 }
 
 export function getTagHref(slug: string): string {
-  return `/blog/tag/${encodeURIComponent(slug)}`;
+  // Trailing slash matches the built file (/blog/tag/<slug>/index.html); without
+  // it Netlify answers with a 301 first.
+  return `/blog/tag/${encodeURIComponent(slug)}/`;
 }
 
 /**
@@ -65,5 +67,5 @@ export function getPostsForTag(posts: BlogPost[], slug: string): BlogPost[] {
     .filter((post) =>
       (post.data.tags ?? []).some((tag) => getTagSlug(tag) === slug),
     )
-    .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+    .sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
 }

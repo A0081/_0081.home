@@ -12,11 +12,11 @@ const { sideBarActiveItemID, variant = "default" } = Astro.props;
 // redirect is an extra round trip on every click.
 const navItems = [
   { id: "about", href: "/about/", label: "关于", icon: "user" },
+  { id: "blog", href: "/blog/", label: "思想&方法", icon: "file" },
   { id: "projects", href: "/projects/", label: "项目", icon: "folder" },
   // Hidden while /store/ is still template scaffolding. The route and its
   // content stay in place, so this is the only line to restore it.
   // { id: "store", href: "/store/", label: "商店", icon: "bag" },
-  { id: "blog", href: "/blog/", label: "思想&方法", icon: "file" },
   { id: "journal", href: "/journal/", label: "闪念", icon: "pen" },
   { id: "tags", href: "/blog/tag/", label: "标签", icon: "tag" },
 ];

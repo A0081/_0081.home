@@ -6,7 +6,9 @@ import createSlug from "../../lib/createSlug";
 
 export async function getStaticPaths({ paginate }) {
   const posts = await getCollection("blog");
-  posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+  // Oldest first: the earliest published post sits at the top, so the list
+  // reads like a chronological index rather than a feed.
+  posts.sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
   return paginate(posts, { pageSize: 10 });
 }
 
@@ -38,7 +40,7 @@ const { page } = Astro.props;
               title={post.data.title}
               img={post.data.heroImage}
               desc={post.data.description}
-              url={"/blog/" + createSlug(post.data.title, post.id)}
+              url={"/blog/" + createSlug(post.data.title, post.id) + "/"}
               target="_self"
               badge={post.data.badge}
               tags={post.data.tags}
@@ -64,7 +66,7 @@ const { page } = Astro.props;
           >
             <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z" />
           </svg>{" "}
-          更新的文章
+          更早的文章
         </a>
       ) : (
         <div />
@@ -73,7 +75,7 @@ const { page } = Astro.props;
     {
       page.url.next ? (
         <a href={page.url.next} class="btn btn-ghost mx-5 my-10">
-          更早的文章{" "}
+          更新的文章{" "}
           <svg
             class="h-6 w-6 fill-current md:h-8 md:w-8"
             xmlns="http://www.w3.org/2000/svg"
