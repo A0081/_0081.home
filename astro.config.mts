@@ -17,6 +17,13 @@ export default defineConfig({
     prefetchAll: true,
     defaultStrategy: "viewport",
   },
+  // Lets the router emit Speculation Rules so Chrome can prerender a link in a
+  // hidden tab on hover. A prerendered page does not need to be fetched or
+  // parsed on click — it is already built, so the swap is a single frame.
+  // Browsers without the API fall back to the prefetch above.
+  experimental: {
+    clientPrerender: true,
+  },
   markdown: {
     // Two Shiki themes so code follows the page theme: `--shiki-light` /
     // `--shiki-dark` are emitted as custom properties and global.css picks one.
